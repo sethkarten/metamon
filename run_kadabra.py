@@ -42,6 +42,7 @@ default_args = [
     "--epochs", "50",
     "--batch_size_per_gpu", "64",
     "--dloader_workers", "4",
+    "--formats", "gen9ou",
     "--use_cached_filenames",
     "--log",
 ]
