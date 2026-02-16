@@ -6,13 +6,18 @@ as a namespace package, which shadows the properly installed editable package.
 We clean PYTHONPATH and sys.path before exec'ing into the venv Python.
 """
 import os
-import subprocess
 import sys
 
-VENV_PYTHON = "/scratch/gpfs/CHIJ/milkkarten/metamon_ref/.venv/bin/python"
+VENV_BIN = "/scratch/gpfs/CHIJ/milkkarten/metamon_ref/.venv/bin"
+VENV_PYTHON = os.path.join(VENV_BIN, "python")
+ACCELERATE = os.path.join(VENV_BIN, "accelerate")
 METAMON_DIR = "/scratch/gpfs/CHIJ/milkkarten/metamon_ref"
 CACHE_DIR = "/scratch/gpfs/CHIJ/milkkarten/.pokemon_cache"
 SAVE_DIR = "/scratch/gpfs/CHIJ/milkkarten/metamon_ckpts"
+
+# Detect GPU count from CUDA_VISIBLE_DEVICES
+cuda_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "")
+num_gpus = len(cuda_devices.split(",")) if cuda_devices else 1
 
 # Clean environment to avoid namespace conflicts
 env = os.environ.copy()
@@ -42,10 +47,18 @@ default_args = [
 # Allow overriding with CLI args
 args = sys.argv[1:] if len(sys.argv) > 1 else default_args
 
-cmd = [VENV_PYTHON, "-m", "metamon.rl.train"] + args
+# Use accelerate launch for multi-GPU support
+cmd = [
+    ACCELERATE, "launch",
+    "--num_processes", str(num_gpus),
+    "--mixed_precision", "no",
+    "-m", "metamon.rl.train",
+] + args
+
+print(f"GPUs: {num_gpus} (CUDA_VISIBLE_DEVICES={cuda_devices})")
 print(f"Running: {' '.join(cmd)}")
 print(f"CWD: {METAMON_DIR}")
 sys.stdout.flush()
 
 os.chdir(METAMON_DIR)
-os.execve(VENV_PYTHON, cmd, env)
+os.execve(ACCELERATE, cmd, env)
