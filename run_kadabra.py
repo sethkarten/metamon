@@ -26,6 +26,7 @@ env["METAMON_CACHE_DIR"] = CACHE_DIR
 env["HF_HOME"] = os.path.join(CACHE_DIR, "huggingface")
 env["HF_HUB_OFFLINE"] = "1"  # Don't try to download anything on compute node
 env["WANDB_MODE"] = "offline"  # No internet on compute nodes
+env["PYTHONUNBUFFERED"] = "1"  # Flush output for SLURM log visibility
 
 # Default training args for Kadabra (medium_multitaskagent + binary_rl)
 default_args = [
